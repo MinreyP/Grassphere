@@ -1,0 +1,387 @@
+{% assign flavour_products = bundleOBJ.flavour_products.value %}
+{% assign product_x = bundleOBJ.product_x.value %}
+{% assign isGiftcard = bundleOBJ.giftcard_req.value %}
+
+<div id="bundleApp" class="product-form__bundle text-center">
+    <div class="container">
+      <h2 class="heading heading--small grassphere-self-selection-title">選擇分享組內容</h2>
+      <p>溫馨提示：用鍵盤輸入時請檢查輸入法，注音文將導致輸出數字不對</p>
+      <div class="ako-set-product">
+        <div class="block-swatch-list">
+          {% for variant in product.variants %}
+
+          <div class="block-swatch">
+            <input type="radio" class="block-swatch__radio visually-hidden" {% if
+              variant == product.first_available_variant %} checked ref="bundleDefault" {% endif %}
+              @change="onChangeRadio('bundle', $event)" data-title="{{ variant.title }}"
+              value="{{ variant.id }}" name="{{ product.id }}" id="{{ variant.id }}">
+            <label class="block-swatch__item" for="{{ variant.id }}">{{ variant.title }}</label>
+          </div>
+
+          {% endfor %}
+        </div>
+      </div>
+
+      {%- for product in flavour_products -%}
+      {%- if forloop.first == true -%}
+      <div id=ako-bundle-{{product.id}} class="ako-bundle-collapsible open">
+      {%- else -%}
+      <div id=ako-bundle-{{product.id}} class="ako-bundle-collapsible">
+      {%- endif -%}
+        <div class="ako-bundle-series_title">
+          <div class="ako-bundle-series_title-content">
+            <p>{{ product.title }}</p>
+            <span class="ako-selector-count" id="ako-bundle-section-{{ product.id }}">0</span>
+          </div>
+          {%- render 'icon' with 'chevron' -%}
+        </div>
+        <div class="ako-series-content">
+          <div class="ako-series-favor-content">
+            {%- for variant in product.variants -%}
+            <div class="ako-bundle-favor-group">
+              <div class="ako-bundle-favor">
+                <p class="ako-favor-title">
+                  {{ variant.title }}
+                </p>
+                <div class="quantity-selector">
+                  <button type="button" @click="onClickQTY('{{product.id}}','{{ variant.id }}', 'minus')"
+                    class="quantity-selector__button">
+                    {%- render 'icon' with 'minus-big' -%}
+                  </button>
+
+                  <input class="quantity__input quantity-selector__input" type="text" min="0"
+                    data-section="{{ product.id }}" name="{{ variant.id }}"
+                    style="ime-mode:disabled"
+                    @change="onChangeQTY('{{product.id}}','{{ variant.id }}', $event)" 
+                    :value="getValue('{{ variant.id }}')" is="input-number"
+                    inputmode="numeric" autocomplete="off" aria-label="{{ 'product.form.quantity' | t | escape }}">
+
+                  <button type="button" @click="onClickQTY('{{product.id}}','{{ variant.id }}', 'plus')"
+                    class="quantity-selector__button">
+                    {%- render 'icon' with 'plus-big' -%}
+                  </button>
+                </div>
+              </div>
+              <span class="ako-favor-divier"></span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      {%- endfor -%}
+      
+      {% if product_x %}
+      <div class="ako-set-product">
+
+        <h3 class="ako-set-title">{{ product_x.title }}</h3>
+        <div class="block-swatch-list">
+          {% for variant in product_x.variants %}
+
+          <div class="block-swatch">
+            <input type="radio" class="block-swatch__radio visually-hidden" {% if
+              variant == product_x.first_available_variant %} checked ref="productX_default" {% endif %}
+              @change="onChangeRadio('productX', $event)" value="{{ variant.id }}"
+              name="{{ product_x.id }}" id="{{ variant.id }}">
+            <label class="block-swatch__item" for="{{ variant.id }}">{{ variant.title }}</label>
+          </div>
+
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    {% if isGiftcard %}
+    <link rel="stylesheet" href="{{ 'grassphere-card-input.css' | asset_url }}">
+    <div class="product-form__custom-liquid">
+      <label for="grassphere-giftcard-content" class="grassphere-form__label">禮品卡片內容:</label>
+      <div class="field">
+        <textarea maxlength="50" id="grassphere-giftcard-content" class="text-area field__input" placeholder="若需我們代寫小卡，請在這裡填寫內容，50字為限" name="properties[禮品卡片內容]"></textarea>
+      </div>
+    </div>
+    {% endif %}
+
+      <p class="ako-bundle-amount">您已選了<span class="ako-bundle-total">[[ pickedCount ]]</span>包喜愛的風味，還差<span
+          class="ako-bundle-left">[[ totalNum - pickedCount ]]</span>包</p>
+      <button id="bundleAddToCart" type="button" is="loader-button" data-use-primary data-product-add-to-cart-button
+        data-button-content="{{ 'product.form.add_to_cart' | t | escape }}" @click="onSubmit(e)"
+        class="product-form__add-button button  button--full ako-bundle-button">
+        加入購物車
+      </button>
+    </div>
+</div>
+
+{% render 'bundle_module_style' %}
+
+<script>
+  $(document).ready(function () {
+    $('.ako-bundle-series_title').click(function () {
+      $(this).parent().toggleClass('open');
+    });
+  });
+</script>
+
+<script defer>
+
+  const { createApp } = Vue;
+
+  const bundleApp = {
+    data() {
+      return {
+        bundleID: "",
+        productX_ID: "",
+        totalNum: "",
+        flavours: [],
+      }
+    },
+    methods: {
+      onChangeRadio(item, e) {
+        if (item == "productX") {
+          this.productX_ID = e.target.value;
+        }
+        if (item == "bundle") {
+          let titleString = e.target.dataset.title;
+          let onChangeTotal = titleString.match(/^\d{1,2}/gm) * 1;
+          let numAvailableWillBe = onChangeTotal - this.pickedCount;
+
+          if(numAvailableWillBe < 0) {
+            alert('您換了總數量，口味已超選！請重新搭配');
+            this.refresh();
+          } else {
+            this.bundleID = e.target.value;
+            this.totalNum = onChangeTotal;
+          }
+        }
+      },
+      onChangeQTY(sectionID, variantID, e) {
+        const currQTY = this.getValue(variantID);
+        const enteredValue = parseInt(e.target.value, 10);
+        const numAvailable = this.totalNum - this.pickedCount;
+        const updateCalc = enteredValue - currQTY;
+
+        if(isNaN(enteredValue)) {
+          alert('請輸入有效數字');
+          this.setValue(variantID, 0);
+          this.updateSection(sectionID);
+          return;
+        }
+        if(enteredValue === 0) {
+          this.setValue(variantID, 0);
+          this.updateSection(sectionID);
+          return;
+        }
+        if(this.pickedCount + updateCalc > this.totalNum) {
+          alert(`您輸入了超額數量！請重新輸入。`);
+          this.setValue(variantID, 0);
+          this.updateSection(sectionID);
+          return;
+        } 
+        else {
+          this.setValue(variantID, enteredValue);
+          this.updateSection(sectionID);
+          return;
+        }
+      },
+      onClickQTY(sectionID, variantID, action, e) {
+       const currQTY = this.getValue(variantID);
+       const numAvailable = this.totalNum - this.pickedCount;
+ 
+        if (action == 'plus' && this.pickedCount != 0 && this.pickedCount === this.totalNum) {
+          alert('已選足數量，可加入購物車囉');
+          return;
+        }
+        if (action == 'plus' && numAvailable > 0) {
+          this.setValue(variantID, currQTY + 1);
+          this.updateSection(sectionID)
+          return;
+        }
+        if (action == 'minus' && currQTY !== 0) {
+          this.setValue(variantID, currQTY - 1);
+          this.updateSection(sectionID);
+        }
+      },
+      getValue(variantID) {
+        const tFlavour = this.flavours.find(flavour => flavour.flavourID === variantID);
+        return tFlavour ? tFlavour.qty : 0;
+      },
+      setValue(variantID, value) {
+        let newFlavours = this.flavours.map(flavour => {
+          if(flavour.flavourID === variantID) {
+            return ({...flavour, qty: value})
+          } else {
+            return flavour
+          }
+        })
+        this.flavours = newFlavours;
+      },
+      updateSection(sectionID) {
+        const sectionFlavours = this.flavours.filter(flavour => flavour.section === sectionID);
+        let countDisplay = document.querySelector(`#ako-bundle-${sectionID} .ako-selector-count`);
+        let newCount = 0
+
+        if(sectionFlavours !== []) {
+          sectionFlavours.forEach(flavour => newCount += flavour.qty)
+        }
+        countDisplay.innerHTML = newCount;
+      },
+      onSubmit() {
+        let numAvailable = this.totalNum - this.pickedCount;
+        if (this.pickedCount !== 0 && numAvailable === 0) {
+          this.sendForm();
+        }
+        if(numAvailable > 0) {
+          alert(`您尚有${this.totalNum - this.pickedCount}包數量待選`);
+        }
+        if(numAvailable < 0) {
+          alert('口味已超選！請重新搭配');
+          this.refresh();
+        }
+      },
+      sendForm() {
+        let randomBundleID = Date.now();
+        let giftCardContent = "";
+        // Check if the gift card element exists
+        let giftCardEl = document.getElementById("grassphere-giftcard-content")
+        if (giftCardEl) { 
+          giftCardContent = giftCardEl.value 
+        }
+
+        let formData = {
+          'items': [
+            {
+              'id': this.bundleID,
+              'quantity': 1,
+              'properties': {
+                "_isBundle": true,
+                "_version": 2023,
+                "_bundleID": randomBundleID,
+                "卡片內容": giftCardContent
+              }
+            }
+          ]
+        };
+
+        let flavourArray = this.flavours.filter(flavour => {
+          if (flavour.qty !== 0) {
+            return flavour
+          }
+        }).map(flavour => {
+          return {
+            'id': flavour.flavourID,
+            'quantity': flavour.qty,
+            'properties': {
+              "_isFlavour": true,
+              "_bundleID": randomBundleID
+            }
+          }
+        })
+      
+        if (this.productX_ID) {
+          let productX_OBJ = {
+            'id': this.productX_ID,
+            'quantity': 1,
+            'properties': {
+              "_bundleID": randomBundleID,
+              "_isFlavour": true
+            }
+          }
+          formData['items'] = [...flavourArray, productX_OBJ, ...formData['items']];
+        } else {
+          formData['items'] = [...flavourArray, ...formData['items']];
+        }
+
+        this.cartAPI(formData);
+      },
+      async cartAPI(data) {
+        const submitButton = document.getElementById('bundleAddToCart');
+        submitButton.setAttribute("disabled", "disabled");
+        submitButton.setAttribute("aria-busy", "true");
+
+        const postResponse = await fetch(window.Shopify.routes.root + 'cart/add.js', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data),
+        })
+        const resJSON = await postResponse.json();
+
+        submitButton.removeAttribute("disabled", "disabled");
+        submitButton.removeAttribute("aria-busy", "true");
+
+        if (postResponse.ok) {
+          document.documentElement.dispatchEvent(new CustomEvent("variant:added", {
+            bubbles: true,
+            detail: {
+              variant: resJSON.hasOwnProperty("items") ? resJSON["items"][0] : resJSON
+            }
+          }));
+          fetch(`${window.themeVariables.routes.cartUrl}.js`).then(async (response2) => {
+            const cartContent = await response2.json();
+            document.documentElement.dispatchEvent(new CustomEvent("cart:updated", {
+              bubbles: true,
+              detail: {
+                cart: cartContent
+              }
+            }));
+
+            document.documentElement.dispatchEvent(new CustomEvent("cart:refresh", {
+              bubbles: true,
+              detail: {
+                cart: cartContent,
+                openMiniCart: true
+              }
+            }));
+          });
+        }
+        document.documentElement.dispatchEvent(new CustomEvent("cart-notification:show", {
+          bubbles: true,
+          cancelable: true,
+          detail: {
+            status: postResponse.ok ? "success" : "error",
+            error: resJSON["description"] || ""
+          }
+        }));
+        this.refresh();
+      },
+      refresh() {
+       let allSectionsEle = Array.from(document.querySelectorAll('.ako-selector-count'));
+       let cleanUpFlavours = this.flavours.map(flavour => ({...flavour, qty: 0}));
+       this.flavours = cleanUpFlavours;
+       allSectionsEle.forEach(ele => ele.innerHTML = '0');
+       this.bundleID = this.$refs.bundleDefault.value;
+       this.productX_ID = this.$refs.productX_default ? this.$refs.productX_default.value : null;
+       this.totalNum = this.$refs.bundleDefault.dataset.title.match(/^\d{1,2}/gm) * 1;
+       this.$refs.bundleDefault.checked = true;
+       this.$refs.productX_default.checked = this.productX_ID ? true : false;
+      }
+    },
+    computed: {
+      pickedCount: function() {
+        let qty = 0;
+        if(this.flavours !== []) {
+          this.flavours.forEach(flavour => qty += flavour.qty);
+        }
+        return qty;
+      }
+    },
+    mounted() {
+      const flavoursDOM = Array.from(this.$el.querySelectorAll('.quantity-selector__input'));
+      let totalNumString = this.$refs.bundleDefault ? this.$refs.bundleDefault.dataset.title : null;
+      const newFlavours = flavoursDOM.map(flavour => (
+        {
+          section: flavour.dataset.section,
+          flavourID: flavour.name,
+          qty: 0
+        }
+      ))
+      this.flavours = newFlavours;
+      this.bundleID = this.$refs.bundleDefault ? this.$refs.bundleDefault.value : '';
+      this.productX_ID = this.$refs.productX_default ? this.$refs.productX_default.value : null;
+      this.totalNum = totalNumString.match(/^\d{1,2}/gm) * 1;
+    },
+    delimiters: ['[[', ']]']
+  }
+
+  createApp(bundleApp).mount("#bundleApp");
+
+</script>

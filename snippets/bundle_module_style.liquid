@@ -1,0 +1,194 @@
+<style>
+.ako-set-product {
+    margin-bottom: 40px;
+}
+
+.quantity-selector__input {
+    max-width: 2em;
+    padding: 0 4px;
+}
+
+h3.ako-set-title {
+    font-size: 20px;
+    color: var(--grassphere-color__main);
+    margin-bottom: 20px;
+}
+
+.ako-bundle-series_title {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+}
+
+.ako-bundle-series_title-content {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.ako-bundle-series_title-content>p {
+    margin: 0px;
+    font-size: 20px;
+    color: var(--grassphere-color__main);
+    font-weight: 600;
+    margin-right: 10px;
+}
+
+span.ako-selector-count {
+    background-color: #DA6027;
+    width: 24px;
+    height: 24px;
+    border-radius: 50px;
+    text-align: center;
+    color: #fff;
+    font-size: 12px;
+    line-height: 24px;
+    font-weight: 600;
+}
+
+
+p.ako-favor-title {
+    font-size: var(--grassphere-fontsize__medium);
+    color: var(--grassphere-color__secondary);
+    margin-right: 10px;
+    line-height: var(--quantity-selector-height);
+    margin-bottom: 0px;
+}
+
+span.ako-favor-divier {
+    width: 1px;
+    height: 20px;
+    background: rgba(84, 86, 90, 0.2);
+    margin: 0 30px;
+}
+
+span.ako-favor-divier:last-child {
+    display: none;
+}
+
+.ako-bundle-content {
+    margin-bottom: 40px;
+}
+
+
+/*  Series  */
+.ako-series-favor-content {
+    display: flex;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.ako-series-favor-content:last-child {
+    margin-bottom: 40px;
+}
+
+.ako-bundle-favor {
+    display: flex;
+    align-items: center;
+}
+
+p.ako-favor-title.series-favor {
+    margin: 0;
+    color: #5C7760;
+    font-weight: 600;
+}
+
+/* Open/close */
+.ako-bundle-collapsible>.ako-bundle-content {
+    opacity: 0;
+    height: 0;
+    margin-bottom: 0;
+    visibility: hidden;
+}
+
+.ako-bundle-collapsible {
+    animation: all ease-in .25s;
+}
+
+.ako-bundle-collapsible:hover {
+    cursor: pointer;
+}
+
+.ako-bundle-collapsible.open>.ako-bundle-content {
+    display: flex;
+    align-items: center;
+    opacity: 1;
+    height: fit-content;
+    margin-bottom: 30px;
+    visibility: visible;
+    transition: all .3s;
+
+}
+
+.ako-bundle-collapsible>.ako-series-content {
+    opacity: 0;
+    height: 0;
+    margin-bottom: 0;
+    visibility: hidden;
+
+}
+
+.ako-bundle-collapsible.open>.ako-series-content {
+    opacity: 1;
+    height: fit-content;
+    margin-bottom: 30px;
+    visibility: visible;
+    transition: all .3s;
+}
+
+.ako-bundle-collapsible>.ako-bundle-series_title>svg {
+    transform: rotate(180deg);
+    transition: all .3s;
+}
+
+.ako-bundle-collapsible.open>.ako-bundle-series_title>svg {
+    transform: rotate(0deg);
+    transition: all .3s;
+}
+
+/*  加入購物車  */
+.ako-bundle-button {
+    width: 520px;
+    height: 67px;
+    color: #fff;
+    background: #E18052;
+    font-size: 20px;
+    border-radius: 50px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+@media screen and (max-width: 565px) {
+    .ako-bundle-button {
+        width: 100%
+    }
+}
+
+/* .ako-bundle-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }  */
+
+/*  選擇包數 */
+p.ako-bundle-amount-full,
+p.ako-bundle-amount {
+    text-align: center;
+    font-size: var(--grassphere-fontsize__large);
+    color: var(--grassphere-color__secondary);
+    font-weight: 600;
+}
+
+span.ako-bundle-total,
+span.ako-bundle-left {
+    color: #E18052;
+}
+</style>
